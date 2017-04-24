@@ -54,6 +54,9 @@ final class PhotosViewController : UICollectionViewController {
     var cancelBarButton: UIBarButtonItem?
     var albumTitleView: AlbumTitleView?
     
+    var dismissCanceled: Bool = true
+    var dismissDone: Bool = true
+
     let expandAnimator = ZoomAnimator()
     let shrinkAnimator = ZoomAnimator()
     
@@ -146,22 +149,57 @@ final class PhotosViewController : UICollectionViewController {
         updateDoneButton()
     }
     
+    // MARK: Public methods
+    func deselectAll() {
+        let selected = photosDataSource?.selections
+        // Deselect asset
+        photosDataSource?.selections.removeAll()
+
+        // Update done button
+        updateDoneButton()
+
+        if let photosDataSource = photosDataSource, let collectionView = collectionView, let selected = selected {
+            // Get indexPaths of selected items
+            let selectedIndexPaths = selected.flatMap({ (asset) -> IndexPath? in
+                let index = photosDataSource.fetchResult.index(of: asset)
+                guard index != NSNotFound else { return nil }
+                return IndexPath(item: index, section: 1)
+            })
+
+            // Reload selected cells to update their selection number
+            UIView.setAnimationsEnabled(false)
+            collectionView.reloadItems(at: selectedIndexPaths)
+            UIView.setAnimationsEnabled(true)
+
+            for indexPath in selectedIndexPaths {
+                let cell = collectionView.cellForItem(at: indexPath) as? PhotoCell
+                cell?.photoSelected = false
+            }
+        }
+    }
+
     // MARK: Button actions
     func cancelButtonPressed(_ sender: UIBarButtonItem) {
         guard let closure = cancelClosure, let photosDataSource = photosDataSource else {
-            dismiss(animated: true, completion: nil)
+            if dismissCanceled {
+                dismiss(animated: true, completion: nil)
+            }
             return
         }
         DispatchQueue.global().async {
             closure(photosDataSource.selections)
         }
         
-        dismiss(animated: true, completion: nil)
+        if dismissCanceled {
+            dismiss(animated: true, completion: nil)
+        }
     }
     
     func doneButtonPressed(_ sender: UIBarButtonItem) {
         guard let closure = finishClosure, let photosDataSource = photosDataSource else {
-            dismiss(animated: true, completion: nil)
+            if dismissDone {
+                dismiss(animated: true, completion: nil)
+            }
             return
         }
         
@@ -169,7 +207,9 @@ final class PhotosViewController : UICollectionViewController {
             closure(photosDataSource.selections)
         }
         
-        dismiss(animated: true, completion: nil)
+        if dismissDone {
+            dismiss(animated: true, completion: nil)
+        }
     }
     
     func albumButtonPressed(_ sender: UIButton) {

@@ -51,7 +51,6 @@ open class BSImagePickerViewController : UINavigationController {
     /**
      Fetch results.
      */
-    
     open lazy var fetchResults: [PHFetchResult] = { () -> [PHFetchResult<PHAssetCollection>] in
         let fetchOptions = PHFetchOptions()
         
@@ -63,7 +62,11 @@ open class BSImagePickerViewController : UINavigationController {
         
         return [cameraRollResult, albumResult]
     }()
-    
+
+    open var isEnableCancelButton = true
+
+    open var isEnableAlbum = true
+
     var albumTitleView: AlbumTitleView = bundle.loadNibNamed("AlbumTitleView", owner: nil, options: nil)!.first as! AlbumTitleView
     
     static let bundle: Bundle = Bundle(path: Bundle(for: PhotosViewController.self).path(forResource: "BSImagePicker", ofType: "bundle")!)!
@@ -74,8 +77,8 @@ open class BSImagePickerViewController : UINavigationController {
                                       settings: self.settings)
         
         vc.doneBarButton = self.doneButton
-        vc.cancelBarButton = self.cancelButton
-        vc.albumTitleView = self.albumTitleView
+        vc.cancelBarButton = self.isEnableCancelButton ? self.cancelButton : nil
+        vc.albumTitleView = self.isEnableAlbum ? self.albumTitleView : nil
         
         return vc
     }()
@@ -99,6 +102,10 @@ open class BSImagePickerViewController : UINavigationController {
         }
     }
     
+    open func deselectAll() {
+        photosViewController.deselectAll()
+    }
+
     /**
     Sets up an classic image picker with results from camera roll and albums
     */
