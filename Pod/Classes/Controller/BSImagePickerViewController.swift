@@ -102,6 +102,10 @@ open class BSImagePickerViewController : UINavigationController {
         }
     }
     
+    open func deselect(assets: [PHAsset]) {
+        photosViewController.deselect(assets: assets)
+    }
+    
     open func deselectAll() {
         photosViewController.deselectAll()
     }

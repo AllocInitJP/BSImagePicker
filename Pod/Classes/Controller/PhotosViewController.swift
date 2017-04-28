@@ -150,31 +150,47 @@ final class PhotosViewController : UICollectionViewController {
     }
     
     // MARK: Public methods
-    func deselectAll() {
-        let selected = photosDataSource?.selections
-        // Deselect asset
-        photosDataSource?.selections.removeAll()
-
+    func deselect(assets: [PHAsset]) {
+        guard !assets.isEmpty else {
+            return
+        }
+        guard let photosDataSource = photosDataSource else {
+            return
+        }
+        
+        for asset in assets {
+            if let index = photosDataSource.selections.index(of: asset) {
+                // Deselect asset
+                photosDataSource.selections.remove(at: index)
+            }
+        }
+        
         // Update done button
         updateDoneButton()
-
-        if let photosDataSource = photosDataSource, let collectionView = collectionView, let selected = selected {
+        
+        if let collectionView = collectionView {
             // Get indexPaths of selected items
-            let selectedIndexPaths = selected.flatMap({ (asset) -> IndexPath? in
+            let selectedIndexPaths = assets.flatMap({ (asset) -> IndexPath? in
                 let index = photosDataSource.fetchResult.index(of: asset)
                 guard index != NSNotFound else { return nil }
                 return IndexPath(item: index, section: 1)
             })
-
+            
             // Reload selected cells to update their selection number
             UIView.setAnimationsEnabled(false)
             collectionView.reloadItems(at: selectedIndexPaths)
             UIView.setAnimationsEnabled(true)
-
+            
             for indexPath in selectedIndexPaths {
                 let cell = collectionView.cellForItem(at: indexPath) as? PhotoCell
                 cell?.photoSelected = false
             }
+        }
+    }
+    
+    func deselectAll() {
+        if let selected = photosDataSource?.selections {
+            deselect(assets: selected)
         }
     }
 
